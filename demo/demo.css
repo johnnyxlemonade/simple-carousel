@@ -1,4 +1,5 @@
-.simpleCarousel {
+
+.news-container  {
     max-width: 800px;
     margin: 40px auto;
     padding: 20px;
@@ -7,18 +8,6 @@
     background-color: #f9f9f9;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
-.simpleCarouselItem {
-    padding: 15px;
-    border-bottom: 1px solid #eaeaea;
-    display: none;
-}
-
-.simpleCarouselItem:last-child {
-    border-bottom: none;
-}
-
-
 
 .news-title {
     font-size: 1.25rem;

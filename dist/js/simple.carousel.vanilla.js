@@ -1,3 +1,7 @@
+/*!
+ * simple.carousel.es6.js
+ * Autor: Honza Mudrak
+ */
 (function (root, factory) {
     if (typeof define === "function" && define.amd) {
         define([], factory);
@@ -46,6 +50,7 @@
             lazyLoad: true,
             prefetchItems: 1,
             startIndex: 0,
+            enableAnalytics: false,
             onSlideChange: null
         }, options);
 
@@ -59,6 +64,9 @@
             ? this.element.dataset.enableLogging === "true"
             : this.settings.enableLogging;
         this.settings.startIndex = parseInt(this.element.dataset.startIndex) || this.settings.startIndex;
+        this.settings.enableAnalytics = this.element.dataset.enableAnalytics !== undefined
+            ? this.element.dataset.enableAnalytics === "true"
+            : this.settings.enableAnalytics;
 
         // Přidání třídy pro téma
         const themeClass = `simple-carousel-theme-${this.settings.theme}`;
@@ -181,6 +189,10 @@
             this.settings.onSlideChange(this.currentIndex, index);
         }
 
+        if (this.settings.enableAnalytics) {
+            this.trackSlideChange(this.currentIndex, index);
+        }
+
         var currentItem = this.items[this.currentIndex];
         var nextItem = this.items[index];
 
@@ -236,13 +248,15 @@
 
     SimpleCarousel.prototype.loadLazyContent = function (item) {
         var images = item.querySelectorAll('img[data-src]');
-        images.forEach(img => {
-            if (!img.src) {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-                log(this.settings.enableLogging, "Obrázek načten:", img.src);
-            }
-        });
+        if (images.length > 0) {
+            images.forEach(img => {
+                if (!img.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    log(this.settings.enableLogging, "Obrázek načten:", img.src);
+                }
+            });
+        }
 
         var videoPlaceholder = item.querySelector('.simpleCarouselItemVideo[data-video-src]');
         if (videoPlaceholder) {
@@ -279,6 +293,11 @@
                     video.appendChild(source);
 
                     videoPlaceholder.replaceWith(video);
+
+                    if (this.settings.enableAnalytics) {
+                        var videoIndex = Array.from(this.items).indexOf(item);
+                        this.trackVideoPlay(videoIndex, videoSrc);
+                    }
 
                     video.load();
                     video.play().catch(error => {
@@ -346,6 +365,30 @@
         video.addEventListener('ended', () => {
             pauseButton.remove();
         });
+    };
+
+    SimpleCarousel.prototype.trackVideoPlay = function (videoIndex, videoSrc) {
+        console.log(`Sledování spuštění videa na snímku: ${videoIndex}`);
+        if (typeof gtag === 'function') {
+            gtag('event', 'carousel_video_play', {
+                'event_category': 'Carousel',
+                'event_label': 'Video Play',
+                'value': videoIndex,
+                'video_src': videoSrc
+            });
+            log(this.settings.enableLogging, `Google Analytics: Sledování spuštění videa na snímku ${videoIndex} (URL: ${videoSrc})`);
+        }
+    };
+
+    SimpleCarousel.prototype.trackSlideChange = function (currentIndex, nextIndex) {
+        if (typeof gtag === 'function') {
+            gtag('event', 'carousel_slide_change', {
+                'event_category': 'Carousel',
+                'event_label': 'Slide Change',
+                'value': nextIndex
+            });
+            log(this.settings.enableLogging, `Google Analytics: Sledování přechodu na snímek ${nextIndex}`);
+        }
     };
 
     return SimpleCarousel;

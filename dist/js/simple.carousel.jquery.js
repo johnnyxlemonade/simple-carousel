@@ -1,3 +1,7 @@
+/*!
+ * simple.carousel.jquery.js
+ * Autor: Honza Mudrak
+ */
 (function ($, window, document, undefined) {
     if (!$) {
         console.error('jQuery není dostupné. Plugin simpleCarousel potřebuje jQuery.');
@@ -42,19 +46,34 @@
             lazyLoad: true,
             prefetchItems: 100,
             startIndex: 0,
-            onSlideChange: null
+            enableAnalytics: false,
+            onSlideChange: function(currentIndex, nextIndex) {
+
+            }
         }, options);
 
         return this.each(function () {
 
             var $simpleCarousel = $(this);
-            var carouselID = generateUniqueId('simpleCarousel')
+
+            // Přebírání atributu pro téma z data atributu nebo z nastavení
             var theme = $simpleCarousel.data('theme') || settings.theme;
             var themeClass = 'simple-carousel-theme-' + theme;
 
+            // Odebrání všech tříd tématu, které by mohly být na prvcích
+            $simpleCarousel.removeClass(function (index, className) {
+                return (className.match(/(^|\s)simple-carousel-theme-\S+/g) || []).join(' ');
+            });
+
+            // Přidání třídy pro aktuální téma
             $simpleCarousel.addClass(themeClass);
+
+            var carouselID = generateUniqueId('simpleCarousel')
+
             $simpleCarousel.attr('id', carouselID);
 
+
+            var enableAnalytics = $simpleCarousel.data('enable-analytics') !== undefined ? $simpleCarousel.data('enable-analytics') : settings.enableAnalytics;
             var enableLogging = $simpleCarousel.data('enable-logging') !== undefined ? $simpleCarousel.data('enable-logging') : settings.enableLogging;
 
             var $simpleCarouselItems = $simpleCarousel.find('.simpleCarouselItem');
@@ -109,17 +128,32 @@
                 for (var i = 0; i < totalItems; i++) {
                     var indicator = $(
                         `<span class="simpleCarouselAriaIndicator" data-index="${i}" 
-                          aria-controls="carousel-item-${carouselID}-${i}" 
-                          aria-label="Slide ${i + 1}">
-                         </span>`
+              aria-controls="carousel-item-${carouselID}-${i}" 
+              aria-label="Slide ${i + 1}">
+             </span>`
                     );
                     indicator.css({
                         width: indicatorSize,
                         height: indicatorSize,
                         background: indicatorInactiveColor
                     });
+
+                    // Přidání posluchače události `click` pro indikátor
+                    indicator.on('click', function () {
+                        var clickedIndex = $(this).data('index');
+
+                        // Sledování kliknutí na indikátor, pokud je povoleno
+                        if (enableAnalytics) {
+                            trackIndicatorClick(clickedIndex);
+                        }
+
+                        // Přechod na snímek podle kliknutého indikátoru
+                        fadeToIndex(clickedIndex);
+                    });
+
                     $indicatorsContainer.append(indicator);
                 }
+
                 $simpleCarousel.append($indicatorsContainer);
                 log(enableLogging, "Indikátory byly vygenerovány a přidány do karuselu.");
             }
@@ -184,23 +218,74 @@
                 }
 
                 if (typeof settings.onSlideChange === 'function') {
-                    settings.onSlideChange(currentIndex, (currentIndex + 1) % totalItems);
+                     settings.onSlideChange(currentIndex, (currentIndex + 1) % totalItems);
+                }
+
+                // Sledování analytiky, pokud je povolena
+                if (enableAnalytics) {
+                    trackSlideChange(currentIndex, (currentIndex + 1) % totalItems);
                 }
 
                 log(enableLogging, "Přechod na další položku. Aktuální index: " + currentIndex);
+
+                // Uchování reference na aktuální snímek
                 var $currentItem = $simpleCarouselItems.eq(currentIndex);
+
+                // Aktualizace indexu na následující snímek
                 currentIndex = (currentIndex + 1) % totalItems;
+
+                // Uchování reference na následující snímek
                 var $nextItem = $simpleCarouselItems.eq(currentIndex);
 
-                $currentItem.fadeOut(600, function () {
-                    log(enableLogging, "Aktualizovaný index: " + currentIndex);
-                    loadLazyContent($nextItem);
-                    $nextItem.fadeIn(600);
-                    setIndicator(currentIndex);
-                    prefetchItems();
+                // Odebrání třídy `active` z aktuálního snímku a přidání nové třídě
+                $currentItem.removeClass('active');
+                $nextItem.addClass('active');
 
-                    $simpleCarouselItems.attr('aria-hidden', 'true');
-                    $nextItem.attr('aria-hidden', 'false');
+                // Přechod mezi snímky s animací
+                $currentItem.fadeOut(600, function () {
+                    // Nastavit display na none po skončení fadeOut
+                    $currentItem.css('display', 'none');
+
+                    log(enableLogging, "Aktualizovaný index: " + currentIndex);
+
+                    // Načtení obsahu před zobrazením
+                    loadLazyContent($nextItem);
+
+                    // Nastavit display block před začátkem fadeIn
+                    $nextItem.css('display', 'block').hide().fadeIn(600, function () {
+                        // Aktualizace indikátoru po dokončení animace
+                        setIndicator(currentIndex);
+
+                        // Prefetch dalších snímků pro plynulost
+                        prefetchItems();
+
+                        // Aktualizace atributů `aria-hidden` pro přístupnost
+                        $simpleCarouselItems.attr('aria-hidden', 'true'); // Skrytí všech snímků
+                        $nextItem.attr('aria-hidden', 'false'); // Zviditelnění aktivního snímku
+                    });
+                });
+            }
+
+            // Funkce pro přechod na specifický snímek
+            function fadeToIndex(index) {
+                if (currentIndex === index) return; // Pokud už je aktivní snímek stejný jako kliknutý, nic nedělat
+
+                var $currentItem = $simpleCarouselItems.eq(currentIndex);
+                var $nextItem = $simpleCarouselItems.eq(index);
+
+                currentIndex = index;
+
+                $currentItem.removeClass('active').fadeOut(600, function () {
+                    $currentItem.css('display', 'none');
+                    loadLazyContent($nextItem);
+
+                    $nextItem.addClass('active').css('display', 'block').hide().fadeIn(600, function () {
+                        setIndicator(currentIndex);
+                        prefetchItems();
+
+                        $simpleCarouselItems.attr('aria-hidden', 'true');
+                        $nextItem.attr('aria-hidden', 'false');
+                    });
                 });
             }
 
@@ -214,6 +299,7 @@
             }
 
             function loadLazyContent($item) {
+
                 var $images = $item.find('img[data-src]');
                 $images.each(function () {
                     var $img = $(this);
@@ -249,6 +335,12 @@
                                 </video>`
                             );
                             $placeholder.replaceWith($video);
+
+                            // Sledování spuštění videa, pokud je povoleno
+                            if (enableAnalytics) {
+                                var videoIndex = $item.index();
+                                trackVideoPlay(videoIndex, videoSrc);
+                            }
 
                             $video[0].load();
                             $video[0].play().catch(function (error) {
@@ -342,6 +434,49 @@
                     $pauseButton.remove();
                 });
             }
+
+
+            // Funkce pro sledování spuštění videa
+            function trackVideoPlay(videoIndex, videoSrc) {
+                console.log(`Sledování spuštění videa na snímku: ${videoIndex}`);
+                if (typeof gtag === 'function') {
+                    gtag('event', 'carousel_video_play', {
+                        'event_category': 'Carousel',
+                        'event_label': 'Video Play',
+                        'value': videoIndex,
+                        'video_src': videoSrc
+                    });
+                    log(enableLogging, `Google Analytics: Sledování spuštění videa na snímku ${videoIndex} (URL: ${videoSrc})`);
+                }
+            }
+
+            // Funkce pro sledování kliknutí na indikátor
+            function trackIndicatorClick(clickedIndex) {
+                console.log(`Sledování kliknutí na indikátor: ${clickedIndex}`);
+                if (typeof gtag === 'function') {
+                    gtag('event', 'carousel_indicator_click', {
+                        'event_category': 'Carousel',
+                        'event_label': 'Indicator Click',
+                        'value': clickedIndex
+                    });
+                    log(enableLogging, `Google Analytics: Sledování kliknutí na indikátor ${clickedIndex}`);
+                }
+            }
+
+            function trackSlideChange(currentIndex, nextIndex) {
+
+                console.log(typeof gtag === 'function');
+                // Sledování přechodu mezi snímky pro Google Analytics
+                if (typeof gtag === 'function') {
+                    gtag('event', 'carousel_slide_change', {
+                        'event_category': 'Carousel',
+                        'event_label': 'Slide Change',
+                        'value': nextIndex
+                    });
+                    log(enableLogging, `Google Analytics: Sledování přechodu na snímek ${nextIndex}`);
+                }
+            }
+
         });
     };
 

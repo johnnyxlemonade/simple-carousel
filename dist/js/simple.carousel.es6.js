@@ -1,11 +1,9 @@
 /*!
- * simple.carousel.es6.updated.js
+ * simple.carousel.es6.js
  * Autor: Honza Mudrak
- * Upravená verze s validací startIndex, předběžným načítáním (prefetchItems), lazy loadingem a unikátním ID.
  */
 class SimpleCarousel {
     constructor(element, options = {}) {
-
         // Přidání třídy js-enabled pouze jednou pro podporu starších prohlížečů
         if (document.documentElement.className.indexOf('simple-carousel-js') === -1) {
             document.documentElement.className += ' simple-carousel-js';
@@ -23,6 +21,7 @@ class SimpleCarousel {
             lazyLoad: true,
             prefetchItems: 1,
             startIndex: 0,
+            enableAnalytics: false,
             onSlideChange: null,
             ...options
         };
@@ -37,6 +36,9 @@ class SimpleCarousel {
             ? this.element.dataset.enableLogging === "true"
             : this.settings.enableLogging;
         this.settings.startIndex = parseInt(this.element.dataset.startIndex) || this.settings.startIndex;
+        this.settings.enableAnalytics = this.element.dataset.enableAnalytics !== undefined
+            ? this.element.dataset.enableAnalytics === "true"
+            : this.settings.enableAnalytics;
 
         // Přidání třídy pro téma
         const themeClass = `simple-carousel-theme-${this.settings.theme}`;
@@ -48,6 +50,7 @@ class SimpleCarousel {
 
         this.init();
     }
+
     log(message, data) {
         if (this.settings.enableLogging) {
             const timestamp = new Date().toLocaleTimeString();
@@ -175,6 +178,10 @@ class SimpleCarousel {
             this.settings.onSlideChange(this.currentIndex, index);
         }
 
+        if (this.settings.enableAnalytics) {
+            this.trackSlideChange(this.currentIndex, index);
+        }
+
         const currentItem = this.items[this.currentIndex];
         const nextItem = this.items[index];
 
@@ -221,6 +228,9 @@ class SimpleCarousel {
             if (i === index) {
                 indicator.style.background = this.settings.indicatorActiveColor;
                 indicator.style.transform = 'scale(1.2)';
+                if (this.settings.enableAnalytics) {
+                    this.trackIndicatorClick(index);
+                }
             } else {
                 indicator.style.background = this.settings.indicatorInactiveColor;
                 indicator.style.transform = 'scale(1.0)';
@@ -254,14 +264,19 @@ class SimpleCarousel {
                 videoPlaceholder.appendChild(playIcon);
             }
 
+            // Přidání klikací logiky pro placeholder
             videoPlaceholder.addEventListener('click', () => {
                 this.stopCarousel();
                 this.isVideoPlaying = true;
 
+                if (this.settings.enableAnalytics) {
+                    this.trackVideoPlay(this.currentIndex, videoSrc);
+                }
+
                 if (videoSrc) {
                     const video = document.createElement('video');
-                    video.setAttribute('controls', '');
                     video.className = 'simpleCarouselVideo';
+                    video.controls = true;
                     video.poster = poster;
                     video.disablePictureInPicture = true;
                     video.controlsList = "nodownload nofullscreen";
@@ -279,10 +294,13 @@ class SimpleCarousel {
                     });
 
                     video.classList.add('simpleCarouselVideoPlaying');
+                    this.addCustomVideoControls(video);
 
                     video.addEventListener('ended', () => {
                         this.isVideoPlaying = false;
+                        video.classList.remove('simpleCarouselVideoPlaying');
 
+                        // Vytvoření nového placeholderu
                         const newPlaceholder = document.createElement('div');
                         newPlaceholder.className = 'simpleCarouselItemVideo';
                         newPlaceholder.dataset.videoSrc = videoSrc;
@@ -292,18 +310,45 @@ class SimpleCarousel {
                             newPlaceholder.style.backgroundImage = `url(${poster})`;
                         }
 
-                        const playIcon = document.createElement('div');
-                        playIcon.className = 'simpleCarouselItemVideoPlayIcon';
-                        playIcon.textContent = '▶';
-                        newPlaceholder.appendChild(playIcon);
+                        const newPlayIcon = document.createElement('div');
+                        newPlayIcon.className = 'simpleCarouselItemVideoPlayIcon';
+                        newPlayIcon.textContent = '▶';
+                        newPlaceholder.appendChild(newPlayIcon);
 
                         video.replaceWith(newPlaceholder);
-                        this.loadLazyContent(newPlaceholder);
+
+                        // Znovu připojení události click k novému placeholderu
+                        this.loadLazyContent(item);
+
+                        // Restartování karuselu
                         this.startCarousel();
                     });
                 }
             });
         }
+    }
+
+    addCustomVideoControls(video) {
+        const pauseButton = document.createElement('button');
+        pauseButton.className = 'video-pause';
+        pauseButton.textContent = 'Pauza';
+        video.parentNode.insertBefore(pauseButton, video.nextSibling);
+
+        pauseButton.style.display = 'block';
+
+        pauseButton.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+                pauseButton.textContent = 'Pauza';
+            } else {
+                video.pause();
+                pauseButton.textContent = 'Spustit';
+            }
+        });
+
+        video.addEventListener('ended', () => {
+            pauseButton.remove();
+        });
     }
 
     prefetchItems() {
@@ -318,6 +363,40 @@ class SimpleCarousel {
 
     generateUniqueId(prefix) {
         return prefix + '-' + Math.floor(Math.random() * 100000);
+    }
+
+    trackSlideChange(currentIndex, nextIndex) {
+        if (typeof gtag === 'function') {
+            gtag('event', 'carousel_slide_change', {
+                'event_category': 'Carousel',
+                'event_label': 'Slide Change',
+                'value': nextIndex
+            });
+            this.log(`Google Analytics: Sledování přechodu na snímek ${nextIndex}`);
+        }
+    }
+
+    trackIndicatorClick(clickedIndex) {
+        if (typeof gtag === 'function') {
+            gtag('event', 'carousel_indicator_click', {
+                'event_category': 'Carousel',
+                'event_label': 'Indicator Click',
+                'value': clickedIndex
+            });
+            this.log(`Google Analytics: Sledování kliknutí na indikátor ${clickedIndex}`);
+        }
+    }
+
+    trackVideoPlay(videoIndex, videoSrc) {
+        if (typeof gtag === 'function') {
+            gtag('event', 'carousel_video_play', {
+                'event_category': 'Carousel',
+                'event_label': 'Video Play',
+                'value': videoIndex,
+                'video_src': videoSrc
+            });
+            this.log(`Google Analytics: Sledování spuštění videa na snímku ${videoIndex} (URL: ${videoSrc})`);
+        }
     }
 }
 

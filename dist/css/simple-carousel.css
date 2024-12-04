@@ -4,45 +4,65 @@
     will-change: opacity;
 }
 
-.simpleCarouselItem:first-child {
+.simpleCarouselItem.active {
     display: block;
 }
 
+/* Styling for carousel indicators */
 .simpleCarouselAriaIndicators {
     margin-top: 8px;
 }
 
 .simpleCarouselAriaIndicators .simpleCarouselAriaIndicator {
     display: inline-block;
+    width: 12px;
+    height: 12px;
     margin: 0 5px;
     border-radius: 50%;
-    cursor: pointer;
+    background: #cccccc; /* Light grey color for inactive indicators */
     transition: background 0.3s, transform 0.3s ease-in-out;
+    cursor: pointer;
 }
 
-.simple-carousel-js .simpleCarouselItem {
-    display: none;
-    will-change: opacity;
+.simpleCarouselAriaIndicators .simpleCarouselAriaIndicator.active {
+    background: #007bff; /* Blue color for the active indicator */
+    transform: scale(1.2); /* Slight enlargement to highlight active indicator */
 }
-.simple-carousel-js .simpleCarouselItem:first-child {
-    display: block;
-}
-.simple-carousel-js .simpleCarouselAriaIndicators {
-    margin-top: 8px;
-}
-.simple-carousel-js .simpleCarouselAriaIndicators .simpleCarouselAriaIndicator {
-    display: inline-block;
-    margin: 0 5px;
-    border-radius: 50%;
+
+/* Styling for navigation buttons (if present) */
+.simpleCarouselNavButton {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    border: none;
+    padding: 10px;
     cursor: pointer;
-    transition: background 0.3s, transform 0.3s ease-in-out;
+    transition: background 0.3s ease;
+    z-index: 2; /* Navigační tlačítka nad snímky */
 }
-.simple-carousel-js .simpleCarouselItemImage {
+
+.simpleCarouselNavButton:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.simpleCarouselNavButton.prev {
+    left: 10px;
+}
+
+.simpleCarouselNavButton.next {
+    right: 10px;
+}
+
+/* Společné CSS pro obrázky a videa */
+.simpleCarouselItemImage {
     display: block;
     max-width: 100%;
     height: auto;
 }
-.simple-carousel-js .simpleCarouselItemVideo {
+
+.simpleCarouselItemVideo {
     width: 100%;
     height: 300px;
     background-color: #ddd;
@@ -54,7 +74,8 @@
     position: relative;
     cursor: pointer;
 }
-.simple-carousel-js .simpleCarouselItemVideoPlayIcon {
+
+.simpleCarouselItemVideoPlayIcon {
     width: 60px;
     height: 60px;
     background: rgba(0, 0, 0, 0.5);
@@ -66,22 +87,27 @@
     font-size: 30px;
     position: absolute;
 }
-.simple-carousel-js .simpleCarouselVideo {
+
+.simpleCarouselVideo {
     width: 100%;
     height: auto;
 }
-.simple-carousel-js .simpleCarouselVideoPlaying {
+
+.simpleCarouselVideoPlaying {
     width: 100%;
     height: 100%;
-    max-height: 600px; /* Nastavíme maximální výšku, nebo můžete změnit na vlastní hodnotu */
-    transition: all 0.5s ease-in-out; /* Přidáme hladký přechod velikosti */
+    max-height: 600px;
+    transition: all 0.5s ease-in-out;
 }
-.simple-carousel-js .video-pause {
+
+.video-pause {
     margin-top: 10px;
     background-color: #000;
     color: #fff;
     padding: 5px 10px;
     border: none;
     cursor: pointer;
-    display: none; /* Ovládací prvek bude viditelný až po spuštění videa */
+    display: none;
 }
+
+/* Výchozí téma pro karusel */

@@ -2,8 +2,6 @@
 
 SimpleCarousel is a lightweight and flexible JavaScript carousel plugin available in three versions: jQuery, Vanilla JavaScript, and ES6 Module. It allows you to easily create rotating carousels with customizable indicators.
 
-![SimpleCarousel Demo](./demo/simple-carousel-demo.gif)
-
 ## Versions
 
 - **jQuery Version**: `/dist/js/simple.carousel.jquery.js`
@@ -52,7 +50,30 @@ import SimpleCarousel from './dist/js/simple.carousel.es6.js';
 
 ## Usage
 
+### Video Placeholder and Lazy Loading Example
+```html
+<div class="simpleCarousel" 
+     data-interval="5000" 
+     data-enable-analytics="true" 
+     data-theme="default">
+    <div class="simpleCarouselItem">
+        <div class="news-title">Item 1 Title</div>
+        <div class="news-description">Description for item 1.</div>
+    </div>
+    <div class="simpleCarouselItemVideo" data-video-src="https://www.w3schools.com/html/mov_bbb.mp4" data-poster="https://placehold.co/600x300"></div>
+    <div class="simpleCarouselItem">
+        <div class="news-title">Item 3 Title</div>
+        <div class="news-description">Description for item 3.</div>
+    </div>
+</div>
+```
+In this example:
+- **Video Placeholder** is used for the second slide. The video will load only when the play icon is clicked.
+- **Poster Image** is used as a preview image for the video until it starts playing.
+
 ### Data Attributes
+
+- `data-enable-analytics`: Enables Google Analytics tracking for carousel events like slide changes, indicator clicks, and video plays (`true` or `false`).
 
 You can use `data-` attributes to easily configure the carousel directly in HTML. These attributes are supported in **all versions** of SimpleCarousel, including jQuery, Vanilla JavaScript, and ES6 Module versions.
 
@@ -183,6 +204,13 @@ Import and initialize the carousel using an ES6 module:
 
 ## Features and Improvements
 
+- **Lazy Loading for Videos**: Video content will be loaded only when the user clicks on the play icon, optimizing resource usage and performance.
+- **Placeholder for Videos**: Video elements have a placeholder with a play button icon, which helps indicate that the video is available.
+- **Custom Video Controls**: Added custom controls for videos, such as play and pause buttons, to provide better user interaction.
+- **Analytics Integration**: Added analytics tracking for slide changes, indicator clicks, and video play events. This feature can be enabled through the `enableAnalytics` setting or the `data-enable-analytics` attribute.
+- **Prefetch of Items**: The carousel prefetches the next and previous items to provide smoother transitions between slides.
+- **Page Visibility API**: Carousel automatically stops when the user navigates to another tab, saving system resources, and resumes when the tab is active again.
+
 - **Intersection Observer**: The carousel will automatically start and stop based on the element's visibility in the viewport, ensuring efficient use of resources.
 - **ARIA Attributes**: Added `aria-live`, `role`, and other ARIA attributes to make the carousel accessible to screen readers, improving accessibility.
 - **Centralized Logging**: Logging with timestamps can be enabled with the `enableLogging` option, helping with debugging.
@@ -190,6 +218,10 @@ Import and initialize the carousel using an ES6 module:
 - **Multiple Instances**: SimpleCarousel can be used for multiple carousels on the same page, each with independent instances and settings.
 
 ## Options
+
+- **enableAnalytics** (boolean): Enables analytics tracking of carousel events. Default is `false`.
+- **prefetchItems** (number): Number of items to prefetch ahead and behind the current slide to ensure smooth transitions. Default is `1`.
+- **lazyLoad** (boolean): Whether to lazily load content (e.g., videos). Default is `true`.
 
 - **interval** (number): Time in milliseconds between carousel transitions. Default is `3000`.
 - **generateIndicators** (boolean): Whether to generate indicators for the carousel. Default is `true`.

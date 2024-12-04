@@ -12,6 +12,14 @@
 <body>
 <div class="container">
 
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+            console.log('gtag volána s argumenty:', arguments);
+        }
+    </script>
+
     <section>
         <h2 class="text-center my-4">Aktuální Novinky</h2>
         <div class="news-container simpleCarousel">
@@ -63,7 +71,8 @@
             new simpleCarousel(carousel, {
                 interval: 4000,
                 generateIndicators: true,
-                enableLogging: true, carousel
+                enableLogging: false,
+                enableAnalytics: true
             });
         });
     });
