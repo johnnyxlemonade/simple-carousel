@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegantní Simple Carousel s Bootstrapem</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../dist/js/simple.carousel.jquery.js"></script>
+    <link rel="stylesheet" href="../dist/css/simple-carousel.css">
+    <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="container">
+
+    <section>
+        <h2 class="text-center my-4">Aktuální Novinky</h2>
+        <div class="news-container simpleCarousel"
+             data-theme="default"
+             data-enable-logging="true"
+             data-interval="5000"
+             data-indicator="true"
+             data-indicator-size="12"
+             data-indicator-active-color="#007bff"
+             data-indicator-inactive-color="#d3d3d3"
+             data-current-index="100">
+
+            <div class="simpleCarouselItem">
+                <div class="news-date">15. prosince 2024</div>
+                <div class="news-title">Tipy pro zdravý životní styl</div>
+                <div class="news-description">
+                    Rok 2024 přináší nové trendy v oblasti zdravého životního stylu. Zjistěte, jak žít zdravě a šťastně.
+                    <a href="https://www.google.com/search?q=healthy+lifestyle+tips" class="btn btn-link p-0" target="_blank" rel="noopener">Zjistit více</a>
+                </div>
+                <div class="news-image">
+                    <div class="simpleCarouselItemVideo" data-video-src="https://www.w3schools.com/html/mov_bbb.mp4" data-poster="https://placehold.co/600x300"></div>
+                </div>
+            </div>
+            <div class="simpleCarouselItem">
+                <div class="news-date">10. prosince 2024</div>
+                <div class="news-title">Nejlepší místa pro dovolenou</div>
+                <div class="news-description">
+                    Objevte nejlepší prázdninové destinace pro rok 2024 a zjistěte, kde můžete zažít nezapomenutelné chvíle.
+                    <a href="https://www.google.com/search?q=best+holiday+destinations" class="btn btn-link p-0" target="_blank" rel="noopener">Číst dále</a>
+                </div>
+                <div class="news-image">
+                    <img class="simpleCarouselItemImage" data-src="https://placehold.co/600x400/EEE/31343C" alt="">
+                </div>
+            </div>
+            <div class="simpleCarouselItem">
+                <div class="news-date">25. prosince 2024</div>
+                <div class="news-title">Ekonomické trendy roku 2024</div>
+                <div class="news-description">
+                    Aktuální ekonomické trendy a predikce pro rok 2024. Co můžete očekávat na finančních trzích?
+                    <a href="https://www.google.com/search?q=stock+market+trends" class="btn btn-link p-0" target="_blank" rel="noopener">Více zde</a>
+                </div>
+                <div class="news-image">
+                    <img class="simpleCarouselItemImage" data-src="https://placehold.co/600x400/EEE/31343C" alt="">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.simpleCarousel').simpleCarousel();
+    });
+</script>
+</body>
+</html>

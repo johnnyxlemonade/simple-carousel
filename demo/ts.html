@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegantní Simple Carousel s Bootstrapem</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center my-4">Aktuální Novinky</h2>
+    <div class="news-container simpleCarousel" data-interval="5000">
+        <div class="simpleCarouselItem active">
+            <div class="news-date">10. prosince 2024</div>
+            <div class="news-title">Nejlepší místa pro dovolenou</div>
+            <div class="news-description">
+                Objevte nejlepší prázdninové destinace pro rok 2024 a zjistěte, kde můžete zažít nezapomenutelné chvíle.
+                <a href="https://www.google.com/search?q=best+holiday+destinations" class="btn btn-link p-0" target="_blank" rel="noopener">Číst dále</a>
+            </div>
+        </div>
+        <div class="simpleCarouselItem">
+            <div class="news-date">15. prosince 2024</div>
+            <div class="news-title">Tipy pro zdravý životní styl</div>
+            <div class="news-description">
+                Rok 2024 přináší nové trendy v oblasti zdravého životního stylu. Zjistěte, jak žít zdravě a šťastně.
+                <a href="https://www.google.com/search?q=healthy+lifestyle+tips" class="btn btn-link p-0" target="_blank" rel="noopener">Zjistit více</a>
+            </div>
+        </div>
+        <div class="simpleCarouselItem">
+            <div class="news-date">20. prosince 2024</div>
+            <div class="news-title">Nejnovější filmové premiéry</div>
+            <div class="news-description">
+                Těšte se na nejvíce očekávané filmové premiéry roku 2024. Najděte svůj oblíbený film a připravte se na skvělý zážitek.
+                <a href="https://www.google.com/search?q=latest+movie+releases" class="btn btn-link p-0" target="_blank" rel="noopener">Podrobnosti</a>
+            </div>
+        </div>
+    </div>
+    <div class="simpleCarouselAriaIndicators"></div>
+</div>
+
+<script src="../dist/simple.carousel.ts-compiled.js" ></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Inicializace SimpleCarouselu
+        const myCarousel = new SimpleCarousel('#myCarousel', {
+            interval: 4000, // Interval mezi přechody (v milisekundách)
+            generateIndicators: true,
+            enableLogging: true // Povolení logování pro ladění
+        });
+    });
+</script>
+</body>
+</html>

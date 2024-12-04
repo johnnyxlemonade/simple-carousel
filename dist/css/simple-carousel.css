@@ -1,0 +1,87 @@
+/* Společné CSS pro základní stylování karuselu */
+.simpleCarouselItem {
+    display: none;
+    will-change: opacity;
+}
+
+.simpleCarouselItem:first-child {
+    display: block;
+}
+
+.simpleCarouselAriaIndicators {
+    margin-top: 8px;
+}
+
+.simpleCarouselAriaIndicators .simpleCarouselAriaIndicator {
+    display: inline-block;
+    margin: 0 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s ease-in-out;
+}
+
+.simple-carousel-js .simpleCarouselItem {
+    display: none;
+    will-change: opacity;
+}
+.simple-carousel-js .simpleCarouselItem:first-child {
+    display: block;
+}
+.simple-carousel-js .simpleCarouselAriaIndicators {
+    margin-top: 8px;
+}
+.simple-carousel-js .simpleCarouselAriaIndicators .simpleCarouselAriaIndicator {
+    display: inline-block;
+    margin: 0 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s ease-in-out;
+}
+.simple-carousel-js .simpleCarouselItemImage {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+.simple-carousel-js .simpleCarouselItemVideo {
+    width: 100%;
+    height: 300px;
+    background-color: #ddd;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+.simple-carousel-js .simpleCarouselItemVideoPlayIcon {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 30px;
+    position: absolute;
+}
+.simple-carousel-js .simpleCarouselVideo {
+    width: 100%;
+    height: auto;
+}
+.simple-carousel-js .simpleCarouselVideoPlaying {
+    width: 100%;
+    height: 100%;
+    max-height: 600px; /* Nastavíme maximální výšku, nebo můžete změnit na vlastní hodnotu */
+    transition: all 0.5s ease-in-out; /* Přidáme hladký přechod velikosti */
+}
+.simple-carousel-js .video-pause {
+    margin-top: 10px;
+    background-color: #000;
+    color: #fff;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    display: none; /* Ovládací prvek bude viditelný až po spuštění videa */
+}
