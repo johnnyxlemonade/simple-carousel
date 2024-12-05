@@ -83,6 +83,7 @@
     };
 
     SimpleCarousel.prototype.setup = function () {
+
         var carouselID = generateUniqueId('simpleCarousel');
         this.element.id = carouselID;
         this.items = this.element.querySelectorAll('.simpleCarouselItem');
@@ -153,7 +154,11 @@
         if (this.indicators) {
             this.indicators.forEach(indicator => {
                 indicator.addEventListener('click', () => {
+
+                    if (this.isVideoPlaying) return; // Pokud hraje video, indikátor nemá fungovat
+
                     this.stopCarousel();
+
                     var index = parseInt(indicator.getAttribute('data-index'));
                     if (index !== this.currentIndex) {
                         this.showItem(index);
@@ -161,6 +166,49 @@
                 });
             });
         }
+
+        // --- Přidání podpory pro dotykové obrazovky ---
+        let startX = 0;
+        let startY = 0;
+        let isSwiping = false;
+
+        this.element.addEventListener('touchstart', (e) => {
+            if (this.isVideoPlaying) {
+                // Pokud hraje video, nepokračujeme v přechodu mezi snímky
+                return;
+            }
+            const touch = e.touches[0];
+            startX = touch.pageX;
+            startY = touch.pageY;
+            isSwiping = true;
+        });
+
+        this.element.addEventListener('touchmove', (e) => {
+            if (!isSwiping || this.isVideoPlaying) return;
+
+            const touch = e.touches[0];
+            const diffX = touch.pageX - startX;
+            const diffY = touch.pageY - startY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                e.preventDefault();
+
+                if (diffX > 50) {
+                    this.fadeToIndex((this.currentIndex - 1 + this.totalItems) % this.totalItems);
+                    isSwiping = false;
+                } else if (diffX < -50) {
+                    this.fadeToIndex((this.currentIndex + 1) % this.totalItems);
+                    isSwiping = false;
+                }
+            }
+        });
+
+        this.element.addEventListener('touchend', () => {
+            isSwiping = false;
+        });
+
+        // --- Konec podpory pro dotykové obrazovky ---
+
     };
 
     SimpleCarousel.prototype.startCarousel = function () {
@@ -178,10 +226,17 @@
 
     SimpleCarousel.prototype.fadeToNext = function () {
         if (this.isVideoPlaying) {
-            return;
+            this.stopVideo();
         }
         var nextIndex = (this.currentIndex + 1) % this.totalItems;
         this.showItem(nextIndex);
+    };
+
+    SimpleCarousel.prototype.fadeToIndex = function (index) {
+        if (this.isVideoPlaying) {
+            this.stopVideo();
+        }
+        this.showItem(index);
     };
 
     SimpleCarousel.prototype.showItem = function (index) {
@@ -196,6 +251,9 @@
         var currentItem = this.items[this.currentIndex];
         var nextItem = this.items[index];
 
+        // Stop video if it's playing in the current item
+        this.stopVideo(currentItem);
+
         currentItem.style.display = "none";
         currentItem.setAttribute('aria-hidden', 'true');
 
@@ -207,6 +265,47 @@
 
         this.currentIndex = index;
         this.prefetchItems();
+    };
+
+    SimpleCarousel.prototype.stopVideo = function (item) {
+        const currentItem = item || this.items[this.currentIndex];
+        const videoElement = currentItem.querySelector('video.simpleCarouselVideoPlaying');
+
+        if (videoElement) {
+            videoElement.pause();
+            videoElement.currentTime = 0;
+            videoElement.removeAttribute('src');
+            videoElement.load();
+            this.isVideoPlaying = false;
+
+            const videoSrc = videoElement.querySelector('source') ? videoElement.querySelector('source').src : null;
+            const poster = videoElement.getAttribute('poster');
+
+            if (videoSrc) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'simpleCarouselItemVideo';
+                placeholder.dataset.videoSrc = videoSrc;
+                placeholder.dataset.poster = poster;
+
+                if (poster) {
+                    placeholder.style.backgroundImage = 'url(' + poster + ')';
+                }
+
+                const playIcon = document.createElement('div');
+                playIcon.className = 'simpleCarouselItemVideoPlayIcon';
+                playIcon.textContent = '▶';
+                placeholder.appendChild(playIcon);
+
+                videoElement.replaceWith(placeholder);
+                this.loadLazyContent(currentItem);
+
+                // Odstranění tlačítka \"Pauza\"
+                const pauseButton = currentItem.querySelector('.video-pause');
+                if (pauseButton) {
+                    pauseButton.remove();
+                }
+            }
+        }
     };
 
     SimpleCarousel.prototype.generateIndicators = function () {
@@ -344,11 +443,16 @@
         log(this.settings.enableLogging, `Předběžně načtené snímky kolem indexu ${this.currentIndex}`);
     };
 
+
     SimpleCarousel.prototype.addCustomVideoControls = function (video) {
-        var pauseButton = document.createElement('button');
+
+        const pauseButton = document.createElement('button');
         pauseButton.className = 'video-pause';
         pauseButton.textContent = 'Pauza';
-        video.parentNode.insertBefore(pauseButton, video.nextSibling);
+
+        if (video.parentNode) {
+            video.parentNode.insertBefore(pauseButton, video.nextSibling);
+        }
 
         pauseButton.style.display = 'block';
 
@@ -356,16 +460,20 @@
             if (video.paused) {
                 video.play();
                 pauseButton.textContent = 'Pauza';
+                this.isVideoPlaying = true;
             } else {
                 video.pause();
                 pauseButton.textContent = 'Spustit';
+                this.isVideoPlaying = false;
             }
         });
 
         video.addEventListener('ended', () => {
             pauseButton.remove();
+            this.isVideoPlaying = false;
         });
     };
+
 
     SimpleCarousel.prototype.trackVideoPlay = function (videoIndex, videoSrc) {
         console.log(`Sledování spuštění videa na snímku: ${videoIndex}`);

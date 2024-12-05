@@ -98,6 +98,49 @@
 
             var isVideoPlaying = false;
 
+            // --- Přidání podpory pro dotykové obrazovky ---
+            var startX = 0;
+            var startY = 0;
+            var isSwiping = false;
+
+            $simpleCarousel.on('touchstart', function (e) {
+                if (isVideoPlaying) {
+                    // Pokud hraje video, nepokračujeme v přechodu mezi snímky
+                    return;
+                }
+                var touch = e.originalEvent.touches[0];
+                startX = touch.pageX;
+                startY = touch.pageY;
+                isSwiping = true;
+            });
+
+            $simpleCarousel.on('touchmove', function (e) {
+                if (!isSwiping || isVideoPlaying) return;
+
+                var touch = e.originalEvent.touches[0];
+                var diffX = touch.pageX - startX;
+                var diffY = touch.pageY - startY;
+
+                // Zkontrolujte, zda se jedná o vodorovný pohyb více než svislý
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    e.preventDefault(); // Zabráníme posouvání stránky
+
+                    if (diffX > 50) {
+                        // Přejetí doprava
+                        fadeToIndex((currentIndex - 1 + totalItems) % totalItems);
+                        isSwiping = false;
+                    } else if (diffX < -50) {
+                        // Přejetí doleva
+                        fadeToIndex((currentIndex + 1) % totalItems);
+                        isSwiping = false;
+                    }
+                }
+            });
+
+            $simpleCarousel.on('touchend', function () {
+                isSwiping = false;
+            });
+
             log(enableLogging, "Karusel byl inicializován s těmito parametry:", {
                 interval,
                 generateIndicators,
@@ -126,12 +169,11 @@
                 log(enableLogging, "Generuji indikátory...");
 
                 for (var i = 0; i < totalItems; i++) {
+
                     var indicator = $(
-                        `<span class="simpleCarouselAriaIndicator" data-index="${i}" 
-              aria-controls="carousel-item-${carouselID}-${i}" 
-              aria-label="Slide ${i + 1}">
-             </span>`
+                        `<span class="simpleCarouselAriaIndicator" data-index="${i}" aria-controls="carousel-item-${carouselID}-${i}" aria-label="Slide ${i + 1}"></span>`
                     );
+
                     indicator.css({
                         width: indicatorSize,
                         height: indicatorSize,
@@ -140,6 +182,12 @@
 
                     // Přidání posluchače události `click` pro indikátor
                     indicator.on('click', function () {
+
+                        if (isVideoPlaying) {
+                            // Pokud hraje video, indikátor nemá fungovat
+                            return;
+                        }
+
                         var clickedIndex = $(this).data('index');
 
                         // Sledování kliknutí na indikátor, pokud je povoleno
@@ -268,9 +316,34 @@
 
             // Funkce pro přechod na specifický snímek
             function fadeToIndex(index) {
-                if (currentIndex === index) return; // Pokud už je aktivní snímek stejný jako kliknutý, nic nedělat
+                if (currentIndex === index) return;
 
+                // Pokud aktuální snímek obsahuje přehrávající se video
                 var $currentItem = $simpleCarouselItems.eq(currentIndex);
+                var $videoElement = $currentItem.find('video.simpleCarouselVideoPlaying');
+
+                if ($videoElement.length) {
+                    // Zastav video a odstraň ho
+                    $videoElement[0].pause();
+                    isVideoPlaying = false;
+
+                    // Obnov placeholder
+                    var videoSrc = $videoElement.find('source').attr('src');
+                    var poster = $videoElement.attr('poster');
+                    var $newPlaceholder = $('<div class="simpleCarouselItemVideo" data-video-src="' + videoSrc + '" data-poster="' + poster + '"></div>');
+
+                    if (poster) {
+                        $newPlaceholder.css('background-image', 'url(' + poster + ')');
+                    }
+
+                    var $playIcon = $('<div class="simpleCarouselItemVideoPlayIcon">▶</div>');
+                    $newPlaceholder.append($playIcon);
+                    $videoElement.replaceWith($newPlaceholder);
+
+                    loadLazyContent($currentItem);
+                }
+
+                // Pokračuj s přechodem na nový snímek
                 var $nextItem = $simpleCarouselItems.eq(index);
 
                 currentIndex = index;

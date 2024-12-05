@@ -144,6 +144,9 @@ class SimpleCarousel {
         if (this.indicators) {
             this.indicators.forEach(indicator => {
                 indicator.addEventListener('click', () => {
+
+                    if (this.isVideoPlaying) return; // Pokud hraje video, indikátor nemá fungovat
+
                     this.stopCarousel();
                     const index = parseInt(indicator.getAttribute('data-index'));
                     if (index !== this.currentIndex) {
@@ -152,6 +155,8 @@ class SimpleCarousel {
                 });
             });
         }
+
+        this.addTouchSupport();
     }
 
     startCarousel() {
@@ -171,6 +176,13 @@ class SimpleCarousel {
         if (this.isVideoPlaying) return;
         const nextIndex = (this.currentIndex + 1) % this.totalItems;
         this.showItem(nextIndex);
+    }
+
+    fadeToIndex(index) {
+        if (this.isVideoPlaying) {
+            this.stopVideo();
+        }
+        this.showItem(index);
     }
 
     showItem(index) {
@@ -329,10 +341,14 @@ class SimpleCarousel {
     }
 
     addCustomVideoControls(video) {
+
         const pauseButton = document.createElement('button');
         pauseButton.className = 'video-pause';
         pauseButton.textContent = 'Pauza';
-        video.parentNode.insertBefore(pauseButton, video.nextSibling);
+
+        if (video.parentNode) {
+            video.parentNode.insertBefore(pauseButton, video.nextSibling);
+        }
 
         pauseButton.style.display = 'block';
 
@@ -348,6 +364,49 @@ class SimpleCarousel {
 
         video.addEventListener('ended', () => {
             pauseButton.remove();
+        });
+    }
+
+    addTouchSupport() {
+        let startX = 0;
+        let startY = 0;
+        let isSwiping = false;
+
+        this.element.addEventListener('touchstart', (e) => {
+            if (this.isVideoPlaying) {
+                // Pokud hraje video, nepokračujeme v přechodu mezi snímky
+                return;
+            }
+            const touch = e.touches[0];
+            startX = touch.pageX;
+            startY = touch.pageY;
+            isSwiping = true;
+        });
+
+        this.element.addEventListener('touchmove', (e) => {
+            if (!isSwiping || this.isVideoPlaying) return;
+
+            const touch = e.touches[0];
+            const diffX = touch.pageX - startX;
+            const diffY = touch.pageY - startY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                e.preventDefault(); // Zabráníme posouvání stránky
+
+                if (diffX > 50) {
+                    // Přejetí doprava
+                    this.fadeToIndex((this.currentIndex - 1 + this.totalItems) % this.totalItems);
+                    isSwiping = false;
+                } else if (diffX < -50) {
+                    // Přejetí doleva
+                    this.fadeToIndex((this.currentIndex + 1) % this.totalItems);
+                    isSwiping = false;
+                }
+            }
+        });
+
+        this.element.addEventListener('touchend', () => {
+            isSwiping = false;
         });
     }
 
